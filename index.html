@@ -576,7 +576,9 @@
     <button class="btn-big btn-kommen" id="btnLogin" style="width:100%;">Anmelden</button>
     <div class="login-links">
       <button class="login-link" id="btnNewCompany" type="button">+ Neue Firma anlegen</button>
+      <button class="login-link" id="btnRenameCompany" type="button">✎ Firma umbenennen</button>
       <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
+      <button class="login-link" id="btnRenameUser" type="button">✎ Benutzer umbenennen</button>
     </div>
     <p class="login-hint">Einfacher Zugriffsschutz für ein gemeinsam genutztes Gerät – kein Ersatz für echte IT-Sicherheit. Alle Daten bleiben lokal auf diesem Gerät.</p>
   </div>
@@ -1394,6 +1396,34 @@ document.getElementById('btnNewUser').addEventListener('click', async () => {
   saveUsers(users);
   populateLoginUserSelect();
   document.getElementById('loginUserSelect').value = user.id;
+});
+
+document.getElementById('btnRenameCompany').addEventListener('click', () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  if (!companyId) { alert('Bitte zuerst eine Firma auswählen.'); return; }
+  const company = companies.find(c => c.id === companyId);
+  if (!company) return;
+  const newName = prompt('Neuer Name für die Firma:', company.name);
+  if (!newName || !newName.trim()) return;
+  company.name = newName.trim();
+  saveCompanies(companies);
+  populateLoginCompanySelect();
+  document.getElementById('loginCompanySelect').value = companyId;
+  populateLoginUserSelect();
+});
+
+document.getElementById('btnRenameUser').addEventListener('click', () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  const userId = document.getElementById('loginUserSelect').value;
+  if (!companyId || !userId) { alert('Bitte zuerst Firma und Benutzer auswählen.'); return; }
+  const user = users.find(u => u.id === userId && u.companyId === companyId);
+  if (!user) return;
+  const newName = prompt('Neuer Name für den Benutzer:', user.name);
+  if (!newName || !newName.trim()) return;
+  user.name = newName.trim();
+  saveUsers(users);
+  populateLoginUserSelect();
+  document.getElementById('loginUserSelect').value = userId;
 });
 
 document.getElementById('btnLogin').addEventListener('click', async () => {
