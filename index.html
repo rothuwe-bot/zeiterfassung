@@ -580,6 +580,9 @@
       <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
       <button class="login-link" id="btnRenameUser" type="button">✎ Benutzer umbenennen</button>
       <button class="login-link" id="btnChangePassword" type="button">🔒 Passwort ändern</button>
+      <button class="login-link" id="btnLoginExport" type="button">⬇ Gesamt-Backup exportieren</button>
+      <button class="login-link" id="btnLoginImport" type="button">⬆ Gesamt-Backup importieren</button>
+      <input type="file" id="loginFileImport" accept="application/json">
     </div>
     <p class="login-hint">Einfacher Zugriffsschutz für ein gemeinsam genutztes Gerät – kein Ersatz für echte IT-Sicherheit. Alle Daten bleiben lokal auf diesem Gerät.</p>
   </div>
@@ -1464,6 +1467,72 @@ document.getElementById('btnChangePassword').addEventListener('click', async () 
   user.passwordHash = await hashPassword(newPw);
   saveUsers(users);
   alert('Passwort geändert.');
+});
+
+document.getElementById('btnLoginExport').addEventListener('click', () => {
+  const backup = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    companies: companies,
+    users: users,
+    namespaces: {}
+  };
+  companies.forEach(company => {
+    users.filter(u => u.companyId === company.id).forEach(user => {
+      const ns = company.id + '__' + user.id;
+      let data = {};
+      let settingsForUser = null;
+      try { data = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + '__' + ns) || '{}'); } catch (e) {}
+      try { settingsForUser = JSON.parse(localStorage.getItem(SETTINGS_KEY_PREFIX + '__' + ns) || 'null'); } catch (e) {}
+      backup.namespaces[ns] = { companyId: company.id, userId: user.id, data, settings: settingsForUser };
+    });
+  });
+  const stamp = `${new Date().getFullYear()}-${pad(new Date().getMonth()+1)}-${pad(new Date().getDate())}`;
+  downloadFile(`zeiterfassung_gesamtbackup_${stamp}.json`, JSON.stringify(backup, null, 2), 'application/json');
+});
+
+document.getElementById('btnLoginImport').addEventListener('click', () => {
+  document.getElementById('loginFileImport').click();
+});
+
+document.getElementById('loginFileImport').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (!imported || typeof imported !== 'object' || !imported.namespaces || !Array.isArray(imported.companies) || !Array.isArray(imported.users)) {
+        throw new Error('ungültiges Format');
+      }
+      if (!confirm('Gesamt-Backup importieren? Vorhandene Firmen/Benutzer mit gleicher ID werden überschrieben, alle anderen bleiben zusätzlich erhalten.')) return;
+
+      const mergeById = (existing, incoming) => {
+        const map = new Map(existing.map(x => [x.id, x]));
+        incoming.forEach(x => map.set(x.id, x));
+        return Array.from(map.values());
+      };
+      companies = mergeById(companies, imported.companies);
+      users = mergeById(users, imported.users);
+      saveCompanies(companies);
+      saveUsers(users);
+
+      Object.keys(imported.namespaces).forEach(ns => {
+        const entry = imported.namespaces[ns];
+        try { localStorage.setItem(STORAGE_KEY_PREFIX + '__' + ns, JSON.stringify(entry.data || {})); } catch (e) {}
+        if (entry.settings) {
+          try { localStorage.setItem(SETTINGS_KEY_PREFIX + '__' + ns, JSON.stringify(entry.settings)); } catch (e) {}
+        }
+      });
+
+      populateLoginCompanySelect();
+      alert('Backup importiert.');
+    } catch (err) {
+      alert('Die Datei konnte nicht gelesen werden. Bitte ein gültiges Gesamt-Backup (JSON) auswählen.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 document.getElementById('btnLogin').addEventListener('click', async () => {
