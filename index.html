@@ -387,49 +387,6 @@
     line-height: 1.4;
   }
   input[type=file] { display: none; }
-
-  .setup-panel {
-    background: var(--accent-soft);
-    border: 1px solid var(--accent);
-  }
-  .setup-panel summary {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-  }
-  .setup-panel summary::-webkit-details-marker { display: none; }
-  .setup-panel summary::after {
-    content: ' ▾';
-  }
-  .setup-panel[open] summary::after {
-    content: ' ▴';
-  }
-  .setup-steps {
-    margin: 14px 0 0;
-    padding-left: 20px;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--ink);
-  }
-  .setup-steps li { margin-bottom: 8px; }
-  .setup-steps code {
-    background: #fff;
-    padding: 1px 5px;
-    border-radius: 5px;
-    font-size: 12.5px;
-  }
-  .setup-warning {
-    margin: 12px 0 0;
-    padding: 10px 12px;
-    background: #fdf0e4;
-    border: 1px solid #d99a5b;
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--ink);
-  }
 </style>
 </head>
 <body>
@@ -440,17 +397,6 @@
 </header>
 
 <main>
-
-  <details class="panel setup-panel">
-    <summary>Einrichtung (einmalig) – bitte zuerst lesen</summary>
-    <ol class="setup-steps">
-      <li>Aus dem App Store eine kostenlose HTML-Viewer-App installieren, z. B. <b>„Html Preview"</b> (von CyberGame Limited).</li>
-      <li>Diese Datei in der <b>Dateien-App</b> dauerhaft ablegen, z. B. unter „Auf meinem iPhone" in einem eigenen Ordner.</li>
-      <li>Datei antippen → <b>Teilen-Symbol</b> → die Viewer-App auswählen (z. B. „Html Preview").</li>
-      <li>Optional: Über das Teilen-Symbol der Viewer-App „Zum Home-Bildschirm" hinzufügen, falls verfügbar.</li>
-    </ol>
-    <p class="setup-warning">⚠️ <b>Wichtig:</b> Diese Viewer-Apps sind ursprünglich fürs einmalige Anzeigen von HTML-Dateien gedacht – der lokale Speicher (für Kommen/Gehen, Sollzeiten usw.) ist dort möglicherweise <b>nicht dauerhaft zuverlässig</b>. Unten steht „Zuletzt gespeichert" – prüfe nach dem Schließen und erneuten Öffnen der App, ob dieser Zeitstempel erhalten bleibt. Falls nicht, bitte häufig „Backup exportieren" nutzen, um nichts zu verlieren.</p>
-  </details>
 
   <section class="panel">
     <h2>Heute</h2>
@@ -496,21 +442,7 @@
   </section>
 
   <section class="panel">
-    <h2>Monatsübersicht</h2>
-    <div class="month-tiles" id="monthPicker"></div>
-    <div class="pause-row">
-      <label for="defaultSollInput">Standard-Sollzeit Mo–Fr (Std./Tag)</label>
-      <input type="number" id="defaultSollInput" min="0" step="0.25" inputmode="decimal">
-    </div>
-    <div class="pause-row">
-      <label for="startSaldoInput">Startsaldo (Std., z. B. aus altem System)</label>
-      <input type="number" id="startSaldoInput" step="0.25" inputmode="decimal" placeholder="0">
-    </div>
-    <div class="pause-row">
-      <label for="startDateInput">Aufzeichnung beginnt am</label>
-      <input type="date" id="startDateInput">
-    </div>
-    <div id="monthBody"></div>
+    <h2>Übersicht</h2>
     <div class="month-total-row">
       <span>Ist / Soll (Monat)</span>
       <b id="monthIstSoll">0:00 / 0:00</b>
@@ -530,6 +462,24 @@
       <div class="status-stat"><b id="statUrlaub">0</b><span>Urlaub</span></div>
     </div>
     <div class="hint-text" style="margin-top:6px;text-align:center;">Sa/So ohne eigenen Status zählen automatisch als „Kein Arbeitstag"</div>
+  </section>
+
+  <section class="panel">
+    <h2>Monatsübersicht</h2>
+    <div class="month-tiles" id="monthPicker"></div>
+    <div class="pause-row">
+      <label for="defaultSollInput">Standard-Sollzeit Mo–Fr (Std./Tag)</label>
+      <input type="number" id="defaultSollInput" min="0" step="0.25" inputmode="decimal">
+    </div>
+    <div class="pause-row">
+      <label for="startSaldoInput">Startsaldo (Std., z. B. aus altem System)</label>
+      <input type="number" id="startSaldoInput" step="0.25" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="pause-row">
+      <label for="startDateInput">Aufzeichnung beginnt am</label>
+      <input type="date" id="startDateInput">
+    </div>
+    <div id="monthBody"></div>
   </section>
 
   <section class="panel panel-subtle">
@@ -612,9 +562,16 @@ function getSollMinutes(entry, dow) {
 }
 
 // Differenz (Ist - Soll) fuer einen Tag; null = noch nicht bewertbar (Zukunft oder vor Aufzeichnungsbeginn)
+function hasEntryData(entry) {
+  return !!(entry && (entry.start || entry.end || entry.manualHours !== undefined ||
+    entry.pause !== undefined || entry.soll !== undefined || entry.status));
+}
+
 function computeDiffMinutes(entry, dow, key) {
   if (key > todayKeyStr) return null;
   if (settings.startDate && key < settings.startDate) return null;
+  // Heutiger Tag ohne jegliche Eingabe: noch nicht werten (wie ein Zukunftstag behandeln)
+  if (key === todayKeyStr && !hasEntryData(entry)) return null;
   const status = effectiveStatus(entry, dow);
   // Urlaub/Krankheit: Sollzeit gilt als erfüllt, kein Ab- oder Zuschlag
   if (status === 'urlaub' || status === 'krank') return 0;
