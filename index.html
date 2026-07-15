@@ -43,6 +43,10 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
   }
   header h1 {
     font-size: 19px;
@@ -53,6 +57,99 @@
     font-size: 14px;
     opacity: 0.85;
     font-variant-numeric: tabular-nums;
+  }
+  .header-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .session-line {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .session-line .login-link {
+    color: #fff;
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .login-box {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 28px 22px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .login-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 20px;
+    color: var(--accent);
+    text-align: center;
+  }
+  .login-field {
+    margin-bottom: 14px;
+  }
+  .login-field label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .login-field select, .login-field input {
+    width: 100%;
+    padding: 11px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--ink);
+  }
+  .login-error {
+    color: var(--danger);
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .login-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    align-items: center;
+  }
+  .login-link {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .login-hint {
+    margin: 16px 0 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-align: center;
   }
   main {
     padding: 14px 14px 40px;
@@ -446,9 +543,41 @@
 </head>
 <body>
 
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <h1 class="login-title">Anmeldung</h1>
+    <div class="login-field">
+      <label for="loginCompanySelect">Firma</label>
+      <select id="loginCompanySelect"></select>
+    </div>
+    <div class="login-field">
+      <label for="loginUserSelect">Benutzer</label>
+      <select id="loginUserSelect"></select>
+    </div>
+    <div class="login-field">
+      <label for="loginPasswordInput">Passwort</label>
+      <input type="password" id="loginPasswordInput" autocomplete="off">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn-big btn-kommen" id="btnLogin" style="width:100%;">Anmelden</button>
+    <div class="login-links">
+      <button class="login-link" id="btnNewCompany" type="button">+ Neue Firma anlegen</button>
+      <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
+    </div>
+    <p class="login-hint">Einfacher Zugriffsschutz für ein gemeinsam genutztes Gerät – kein Ersatz für echte IT-Sicherheit. Alle Daten bleiben lokal auf diesem Gerät.</p>
+  </div>
+</div>
+
+<div id="appShell" style="display:none;">
 <header>
   <h1>Arbeitszeiterfassung</h1>
-  <div class="clock" id="clock">--:--:--</div>
+  <div class="header-right">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="session-line">
+      <span id="sessionLabel">–</span>
+      <button class="login-link" id="btnSwitchUser" type="button">Wechseln</button>
+    </div>
+  </div>
 </header>
 
 <main>
@@ -555,9 +684,15 @@
   </section>
 
 </main>
+</div>
 
 <script>
-const STORAGE_KEY = 'ths_arbeitszeiten_v1';
+const STORAGE_KEY_PREFIX = 'ths_arbeitszeiten_v1';
+const SETTINGS_KEY_PREFIX = 'ths_arbeitszeiten_settings_v1';
+const LAST_SAVED_KEY_PREFIX = 'ths_arbeitszeiten_lastsaved_v1';
+let STORAGE_KEY = null;
+let SETTINGS_KEY = null;
+let LAST_SAVED_KEY = null;
 const WOCHENTAGE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
@@ -676,7 +811,6 @@ function loadData() {
     return {};
   }
 }
-const LAST_SAVED_KEY = 'ths_arbeitszeiten_lastsaved_v1';
 function saveData(data) {
   if (!STORAGE_OK) return false;
   try {
@@ -704,12 +838,11 @@ function updateLastSavedDisplay() {
   }
 }
 
-let allData = loadData();
+let allData = {};
 if (!STORAGE_OK) {
   document.addEventListener('DOMContentLoaded', showStorageWarning);
 }
 
-const SETTINGS_KEY = 'ths_arbeitszeiten_settings_v1';
 function loadSettings() {
   if (!STORAGE_OK) return { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
   try {
@@ -728,7 +861,7 @@ function saveSettings(s) {
     console.error('Fehler beim Speichern der Einstellungen:', e);
   }
 }
-let settings = loadSettings();
+let settings = { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
 
 // ---------- Uhr ----------
 function tickClock() {
@@ -903,7 +1036,6 @@ function populateMonthPicker() {
     });
   });
 }
-populateMonthPicker();
 
 function updateEntry(key, field, value) {
   if (!allData[key]) allData[key] = {};
@@ -1159,13 +1291,135 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
+// ---------- Firmen & Benutzer (Login) ----------
+const COMPANIES_KEY = 'ths_companies_v1';
+const USERS_KEY = 'ths_users_v1';
+
+function loadCompanies() {
+  try { return JSON.parse(localStorage.getItem(COMPANIES_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveCompanies(list) {
+  try { localStorage.setItem(COMPANIES_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function loadUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function saveUsers(list) {
+  try { localStorage.setItem(USERS_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+let companies = loadCompanies();
+let users = loadUsers();
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+async function hashPassword(pw) {
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function populateLoginCompanySelect() {
+  const sel = document.getElementById('loginCompanySelect');
+  if (companies.length === 0) {
+    sel.innerHTML = '<option value="">– keine Firma angelegt –</option>';
+  } else {
+    sel.innerHTML = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+  populateLoginUserSelect();
+}
+
+function populateLoginUserSelect() {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  const sel = document.getElementById('loginUserSelect');
+  const list = users.filter(u => u.companyId === companyId);
+  if (list.length === 0) {
+    sel.innerHTML = '<option value="">– kein Benutzer angelegt –</option>';
+  } else {
+    sel.innerHTML = list.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+  }
+}
+
+document.getElementById('loginCompanySelect').addEventListener('change', populateLoginUserSelect);
+
+document.getElementById('btnNewCompany').addEventListener('click', () => {
+  const name = prompt('Name der neuen Firma:');
+  if (!name || !name.trim()) return;
+  const company = { id: uid(), name: name.trim() };
+  companies.push(company);
+  saveCompanies(companies);
+  populateLoginCompanySelect();
+  document.getElementById('loginCompanySelect').value = company.id;
+  populateLoginUserSelect();
+});
+
+document.getElementById('btnNewUser').addEventListener('click', async () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  if (!companyId) { alert('Bitte zuerst eine Firma auswählen oder anlegen.'); return; }
+  const name = prompt('Name des neuen Benutzers:');
+  if (!name || !name.trim()) return;
+  const pw = prompt('Passwort für ' + name.trim() + ':');
+  if (!pw) return;
+  const pw2 = prompt('Passwort bestätigen:');
+  if (pw !== pw2) { alert('Die Passwörter stimmen nicht überein.'); return; }
+  const passwordHash = await hashPassword(pw);
+  const user = { id: uid(), companyId, name: name.trim(), passwordHash };
+  users.push(user);
+  saveUsers(users);
+  populateLoginUserSelect();
+  document.getElementById('loginUserSelect').value = user.id;
+});
+
+document.getElementById('btnLogin').addEventListener('click', async () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  const userId = document.getElementById('loginUserSelect').value;
+  const pw = document.getElementById('loginPasswordInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!companyId || !userId) { errEl.textContent = 'Bitte Firma und Benutzer auswählen.'; return; }
+  const user = users.find(u => u.id === userId && u.companyId === companyId);
+  if (!user) { errEl.textContent = 'Benutzer nicht gefunden.'; return; }
+  const hash = await hashPassword(pw || '');
+  if (hash !== user.passwordHash) { errEl.textContent = 'Falsches Passwort.'; return; }
+  const company = companies.find(c => c.id === companyId);
+  startSession(company, user);
+});
+
+document.getElementById('btnSwitchUser').addEventListener('click', () => {
+  location.reload();
+});
+
+function startSession(company, user) {
+  const ns = company.id + '__' + user.id;
+  STORAGE_KEY = STORAGE_KEY_PREFIX + '__' + ns;
+  SETTINGS_KEY = SETTINGS_KEY_PREFIX + '__' + ns;
+  LAST_SAVED_KEY = LAST_SAVED_KEY_PREFIX + '__' + ns;
+
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  document.getElementById('sessionLabel').textContent = company.name + ' · ' + user.name;
+
+  initApp();
+}
+
+function initApp() {
+  allData = loadData();
+  settings = loadSettings();
+  document.getElementById('defaultSollInput').value = settings.defaultSoll;
+  document.getElementById('startSaldoInput').value = settings.startSaldo;
+  document.getElementById('startDateInput').value = settings.startDate;
+  populateMonthPicker();
+  updateLastSavedDisplay();
+  renderToday();
+  renderMonth();
+}
+
 // ---------- Start ----------
-document.getElementById('defaultSollInput').value = settings.defaultSoll;
-document.getElementById('startSaldoInput').value = settings.startSaldo;
-document.getElementById('startDateInput').value = settings.startDate;
-updateLastSavedDisplay();
-renderToday();
-renderMonth();
+populateLoginCompanySelect();
 </script>
 
 </body>
