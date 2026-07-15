@@ -341,7 +341,7 @@
 
   .status-overview {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-top: 14px;
     padding-top: 14px;
@@ -458,7 +458,6 @@
     <div class="status-overview" id="monthStatusCounts">
       <div class="status-stat"><b id="statNormal">0</b><span>Normal</span></div>
       <div class="status-stat"><b id="statKrank">0</b><span>Krank</span></div>
-      <div class="status-stat"><b id="statFrei">0</b><span>Kein Arbeitstag</span></div>
       <div class="status-stat"><b id="statUrlaub">0</b><span>Urlaub</span></div>
     </div>
     <div class="hint-text" style="margin-top:6px;text-align:center;">Sa/So ohne eigenen Status zählen automatisch als „Kein Arbeitstag"</div>
@@ -960,20 +959,23 @@ function renderMonth() {
 
   document.getElementById('statNormal').textContent = countNormal;
   document.getElementById('statKrank').textContent = countKrank;
-  document.getElementById('statFrei').textContent = countFrei;
   document.getElementById('statUrlaub').textContent = countUrlaub;
 }
 
 function computeLifetimeSaldoMinutes() {
   let total = Math.round((Number(settings.startSaldo) || 0) * 60);
-  Object.keys(allData).forEach(key => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
-    if (key > todayKeyStr) return;
-    const entry = allData[key];
-    const dow = new Date(key + 'T00:00:00').getDay();
+  const start = settings.startDate ? new Date(settings.startDate + 'T00:00:00') : null;
+  const end = new Date(todayKeyStr + 'T00:00:00');
+  if (!start || start > end) return total;
+  const d = new Date(start);
+  while (d <= end) {
+    const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const entry = allData[key] || {};
+    const dow = d.getDay();
     const diff = computeDiffMinutes(entry, dow, key);
     if (diff !== null) total += diff;
-  });
+    d.setDate(d.getDate() + 1);
+  }
   return total;
 }
 
