@@ -241,6 +241,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
   }
   .pause-row label { font-size: 13.5px; color: var(--ink-soft); flex: 1; }
   .pause-row input[type=number] {
@@ -368,9 +369,11 @@
     border-radius: 50%;
     background: var(--accent);
   }
-  .calendar-day.status-urlaub { background: #e8f0fb; border-color: #7fa8d9; }
-  .calendar-day.status-krank { background: #fdf0e4; border-color: #d99a5b; }
-  .calendar-day.status-frei { background: #eeeeee; border-color: #b8bcb9; }
+  .calendar-day.status-urlaub { background: #fdf6d8; border-color: #d9c04a; }
+  .calendar-day.status-krank { background: #fbe2e0; border-color: #d96f66; }
+  .calendar-day.status-frei { background: #ece3f7; border-color: #a980d9; }
+  .calendar-day.status-frei-weekend { background: #e1f3e3; border-color: #6fb87a; }
+  .calendar-day.status-zeitausgleich { background: #dceefb; border-color: #6fa8d9; }
   .calendar-day.today { border-color: var(--accent); border-width: 2px; }
   .calendar-day.selected { background: var(--accent); color: #fff; }
   .calendar-day.selected.has-data::after { background: #fff; }
@@ -394,6 +397,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
+    row-gap: 6px;
   }
   .day-row2 {
     display: flex;
@@ -441,11 +446,18 @@
   .day-diff.diff-zero { color: var(--ink-soft); }
   .day-card.weekend { background: #f8f6f1; }
   .day-card.today { background: var(--accent-soft); border-color: var(--accent); }
-  .day-card.status-urlaub { background: #e8f0fb; border-color: #7fa8d9; }
-  .day-card.status-krank { background: #fdf0e4; border-color: #d99a5b; }
-  .day-card.status-frei { background: #eeeeee; border-color: #b8bcb9; }
+  .day-card.status-urlaub { background: #fdf6d8; border-color: #d9c04a; }
+  .day-card.status-krank { background: #fbe2e0; border-color: #d96f66; }
+  .day-card.status-frei { background: #ece3f7; border-color: #a980d9; }
+  .day-card.status-frei-weekend { background: #e1f3e3; border-color: #6fb87a; }
+  .day-card.status-zeitausgleich { background: #dceefb; border-color: #6fa8d9; }
+  .day-card.status-urlaub select { background: #fbedad; border-color: #d9c04a; }
+  .day-card.status-krank select { background: #f7c9c5; border-color: #d96f66; }
+  .day-card.status-frei select { background: #d9c7ef; border-color: #a980d9; }
+  .day-card.status-frei-weekend select { background: #c3e8c9; border-color: #6fb87a; }
+  .day-card.status-zeitausgleich select { background: #b5dbf5; border-color: #6fa8d9; }
   .day-label {
-    width: 46px;
+    width: 40px;
     flex-shrink: 0;
     font-size: 12.5px;
     color: var(--ink-soft);
@@ -456,7 +468,7 @@
     display: flex;
     gap: 5px;
     flex: 1;
-    min-width: 0;
+    min-width: 150px;
   }
   .day-fields input {
     width: 100%;
@@ -471,7 +483,7 @@
   }
   .day-fields input:focus { border-color: var(--accent); outline: none; background: #fff; }
   .day-hours-input {
-    width: 52px;
+    width: 84px;
     flex-shrink: 0;
     text-align: right;
     font-size: 16px;
@@ -480,7 +492,7 @@
     border: 1px solid var(--line);
     background: #fbfbfa;
     font-family: inherit;
-    padding: 6px 4px;
+    padding: 6px 3px;
     border-radius: 8px;
   }
   .day-hours-input:focus { border-color: var(--accent); outline: none; background: #fff; }
@@ -643,8 +655,9 @@
       <input type="number" id="pauseInput" min="0" step="5" inputmode="numeric" placeholder="0">
     </div>
     <div class="pause-row">
-      <label for="manualHoursInput">oder Stunden manuell eingeben</label>
-      <input type="number" id="manualHoursInput" min="0" step="0.25" inputmode="decimal" placeholder="Std.">
+      <label for="manualHoursStdInput">oder Tagessumme manuell (Std : Min)</label>
+      <input type="number" id="manualHoursStdInput" min="0" step="1" inputmode="numeric" placeholder="Std." style="width:52px;">
+      <input type="number" id="manualHoursMinInput" min="0" max="59" step="1" inputmode="numeric" placeholder="Min." style="width:52px;">
     </div>
     <div class="pause-row">
       <label for="sollInput">Sollzeit heute (Std.)</label>
@@ -656,7 +669,8 @@
         <option value="">Normaler Arbeitstag</option>
         <option value="krank">Krankheit</option>
         <option value="urlaub">Urlaub</option>
-        <option value="frei">Kein Arbeitstag</option>
+        <option value="frei" id="statusOptionFrei">Kein Arbeitstag</option>
+        <option value="zeitausgleich">Zeitausgleich</option>
       </select>
     </div>
     <div class="saved-hint" id="pauseSavedHint">Gespeichert ✓</div>
@@ -684,6 +698,10 @@
       <span>Gesamtsaldo (alle Zeit)</span>
       <b id="lifetimeSaldo">±0:00</b>
     </div>
+    <div class="month-total-row">
+      <span>Resturlaub (Tage)</span>
+      <b id="restUrlaub">0</b>
+    </div>
     <div class="status-overview" id="monthStatusCounts">
       <div class="status-stat"><b id="statNormal">0</b><span>Normal</span></div>
       <div class="status-stat"><b id="statKrank">0</b><span>Krank</span></div>
@@ -706,14 +724,19 @@
       <input type="number" id="defaultSollInput" min="0" step="0.25" inputmode="decimal">
     </div>
     <div class="pause-row">
-      <label for="startSaldoInput">Startsaldo (Std., z. B. aus altem System)</label>
-      <input type="number" id="startSaldoInput" step="0.25" inputmode="decimal" placeholder="0">
+      <label for="startSaldoStdInput">Startsaldo (Std : Min, z. B. aus altem System)</label>
+      <input type="number" id="startSaldoStdInput" step="1" inputmode="numeric" placeholder="Std." style="width:52px;">
+      <input type="number" id="startSaldoMinInput" min="0" max="59" step="1" inputmode="numeric" placeholder="Min." style="width:52px;">
+    </div>
+    <div class="pause-row">
+      <label for="urlaubssaldoInput">Urlaubssaldo (Tage)</label>
+      <input type="number" id="urlaubssaldoInput" step="0.5" inputmode="decimal" placeholder="0">
     </div>
     <div class="pause-row">
       <label for="startDateInput">Aufzeichnung beginnt am</label>
       <input type="date" id="startDateInput">
     </div>
-    <div id="monthBody"></div>
+    <div id="monthBody" style="margin-top: 18px;"></div>
   </section>
 
   <section class="panel panel-subtle">
@@ -780,6 +803,32 @@ function minutesToDecimalHours(mins) {
   return parseFloat((mins / 60).toFixed(2));
 }
 
+// Dezimalstunden -> {h, m} fuer die Anzeige in getrennten Std/Min-Feldern
+function decimalHoursToHM(decimal) {
+  const value = Number(decimal) || 0;
+  const sign = value < 0 ? -1 : 1;
+  const abs = Math.abs(value);
+  const h = Math.floor(abs);
+  const m = Math.round((abs - h) * 60);
+  return { h: sign * h, m };
+}
+
+// Std/Min (getrennte Felder) -> Dezimalstunden fuer die interne Speicherung
+function hmToDecimalHours(h, m) {
+  h = Number(h) || 0;
+  m = Number(m) || 0;
+  const sign = h < 0 ? -1 : 1;
+  return sign * (Math.abs(h) + m / 60);
+}
+
+// Dezimalstunden (Dauer, >=0) -> "HH:MM" String fuer <input type="time"> als kompaktes Dauer-Feld
+function decimalHoursToTimeValue(decimal) {
+  const totalMin = Math.max(0, Math.round((Number(decimal) || 0) * 60));
+  const h = Math.min(23, Math.floor(totalMin / 60));
+  const m = totalMin % 60;
+  return `${pad(h)}:${pad(m)}`;
+}
+
 // ---------- Soll/Ist-Vergleich (Überstunden) ----------
 
 // Effektiver Status: expliziter Status hat Vorrang, sonst Sa/So immer vorbelegt mit 'Kein Arbeitstag'
@@ -808,14 +857,15 @@ function hasEntryData(entry) {
 }
 
 function computeDiffMinutes(entry, dow, key) {
-  if (key > todayKeyStr) return null;
   if (settings.startDate && key < settings.startDate) return null;
-  // Heutiger Tag ohne jegliche Eingabe: noch nicht werten (wie ein Zukunftstag behandeln)
+  // Heutiger Tag ohne jegliche Eingabe: noch nicht werten (wie noch nicht erreicht behandeln)
   if (key === todayKeyStr && !hasEntryData(entry)) return null;
   const status = effectiveStatus(entry, dow);
   // Urlaub/Krankheit: Sollzeit gilt als erfüllt, kein Ab- oder Zuschlag
   if (status === 'urlaub' || status === 'krank') return 0;
   // Kein Arbeitstag: keine Sollzeit erwartet, evtl. trotzdem geleistete Zeit zählt voll als Plus
+  // Zeitausgleich: volle Sollzeit wird faellig und (mangels Arbeit) direkt vom Überstunden-Saldo abgezogen
+  // Zukünftige Tage ohne Eintrag: geplante/vorläufige Differenz (i.d.R. -Soll), bis ein echter Wert eingetragen wird
   const soll = (status === 'frei') ? 0 : getSollMinutes(entry, dow);
   const ist = computeNetMinutes(entry) || 0;
   return ist - soll;
@@ -891,13 +941,13 @@ if (!STORAGE_OK) {
 }
 
 function loadSettings() {
-  if (!STORAGE_OK) return { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
+  if (!STORAGE_OK) return { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
   try {
     const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    const defaults = { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
+    const defaults = { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
     return raw && typeof raw === 'object' ? { ...defaults, ...raw } : defaults;
   } catch (e) {
-    return { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
+    return { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
   }
 }
 function saveSettings(s) {
@@ -908,7 +958,7 @@ function saveSettings(s) {
     console.error('Fehler beim Speichern der Einstellungen:', e);
   }
 }
-let settings = { defaultSoll: 5, startSaldo: 0, startDate: '2026-07-01' };
+let settings = { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
 
 // ---------- Uhr ----------
 function tickClock() {
@@ -955,9 +1005,17 @@ function renderToday() {
   document.getElementById('statusStart').textContent = entry.start || '–';
   document.getElementById('statusEnd').textContent = entry.end || '–';
   document.getElementById('pauseInput').value = entry.pause !== undefined ? entry.pause : '';
-  document.getElementById('manualHoursInput').value = entry.manualHours !== undefined ? entry.manualHours : '';
-  document.getElementById('sollInput').value = entry.soll !== undefined ? entry.soll : '';
-  document.getElementById('sollInput').placeholder = minutesToDecimalHours(getDefaultSollMinutes(todayObj.getDay())) || '0';
+  if (entry.manualHours !== undefined) {
+    const hm = decimalHoursToHM(entry.manualHours);
+    document.getElementById('manualHoursStdInput').value = hm.h;
+    document.getElementById('manualHoursMinInput').value = hm.m;
+  } else {
+    document.getElementById('manualHoursStdInput').value = '';
+    document.getElementById('manualHoursMinInput').value = '';
+  }
+  document.getElementById('sollInput').value = entry.soll !== undefined ? entry.soll : (minutesToDecimalHours(getDefaultSollMinutes(todayObj.getDay())) || 0);
+  const todayDow = todayObj.getDay();
+  document.getElementById('statusOptionFrei').textContent = todayDow === 6 ? 'Samstag' : todayDow === 0 ? 'Sonntag' : 'Kein Arbeitstag';
   document.getElementById('statusInput').value = effectiveStatus(entry, todayObj.getDay());
   document.getElementById('btnKommen').disabled = !!entry.start;
   document.getElementById('btnGehen').disabled = !entry.start || !!entry.end;
@@ -1002,14 +1060,16 @@ document.getElementById('pauseInput').addEventListener('input', (e) => {
 });
 
 let manualHoursSaveTimer = null;
-document.getElementById('manualHoursInput').addEventListener('input', (e) => {
+function saveManualHoursFromFields() {
   clearTimeout(manualHoursSaveTimer);
   manualHoursSaveTimer = setTimeout(() => {
     if (!allData[todayKeyStr]) allData[todayKeyStr] = {};
-    if (e.target.value === '') {
+    const stdVal = document.getElementById('manualHoursStdInput').value;
+    const minVal = document.getElementById('manualHoursMinInput').value;
+    if (stdVal === '' && minVal === '') {
       delete allData[todayKeyStr].manualHours;
     } else {
-      allData[todayKeyStr].manualHours = Number(e.target.value);
+      allData[todayKeyStr].manualHours = hmToDecimalHours(stdVal, minVal);
     }
     saveData(allData);
     const hint = document.getElementById('pauseSavedHint');
@@ -1018,7 +1078,9 @@ document.getElementById('manualHoursInput').addEventListener('input', (e) => {
     renderToday();
     renderMonth();
   }, 400);
-});
+}
+document.getElementById('manualHoursStdInput').addEventListener('input', saveManualHoursFromFields);
+document.getElementById('manualHoursMinInput').addEventListener('input', saveManualHoursFromFields);
 
 let sollSaveTimer = null;
 document.getElementById('sollInput').addEventListener('input', (e) => {
@@ -1046,8 +1108,18 @@ document.getElementById('defaultSollInput').addEventListener('change', (e) => {
   renderMonth();
 });
 
-document.getElementById('startSaldoInput').addEventListener('change', (e) => {
-  settings.startSaldo = e.target.value === '' ? 0 : Number(e.target.value);
+function saveStartSaldoFromFields() {
+  const stdVal = document.getElementById('startSaldoStdInput').value;
+  const minVal = document.getElementById('startSaldoMinInput').value;
+  settings.startSaldo = (stdVal === '' && minVal === '') ? 0 : hmToDecimalHours(stdVal, minVal);
+  saveSettings(settings);
+  renderMonth();
+}
+document.getElementById('startSaldoStdInput').addEventListener('change', saveStartSaldoFromFields);
+document.getElementById('startSaldoMinInput').addEventListener('change', saveStartSaldoFromFields);
+
+document.getElementById('urlaubssaldoInput').addEventListener('change', (e) => {
+  settings.urlaubssaldo = e.target.value === '' ? 0 : Number(e.target.value);
   saveSettings(settings);
   renderMonth();
 });
@@ -1084,14 +1156,30 @@ function populateMonthPicker() {
   const base = new Date();
   currentMonthValue = `${base.getFullYear()}-${pad(base.getMonth()+1)}`;
   const startMonthValue = (settings.startDate || '2026-07-01').slice(0, 7);
+  const FUTURE_MONTHS = 6;
+  const MAX_PAST_MONTHS = 15;
   let html = '';
-  for (let i = 0; i < 15; i++) {
+
+  // Aeltesten Monat (Aufzeichnungsbeginn, hoechstens MAX_PAST_MONTHS zurueck) als Startpunkt ermitteln
+  let earliest = null;
+  for (let i = 0; i < MAX_PAST_MONTHS; i++) {
     const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
     const val = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
     if (val < startMonthValue) break;
+    earliest = d;
+  }
+  if (!earliest) earliest = new Date(base.getFullYear(), base.getMonth(), 1);
+
+  // Aufsteigend von earliest bis (aktueller Monat + FUTURE_MONTHS) durchlaufen
+  const d = new Date(earliest);
+  const last = new Date(base.getFullYear(), base.getMonth() + FUTURE_MONTHS, 1);
+  while (d <= last) {
+    const val = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
     const label = `${MONATE[d.getMonth()].slice(0,3)} ${String(d.getFullYear()).slice(2)}`;
     html += `<button type="button" class="month-tile${val===currentMonthValue?' selected':''}" data-month="${val}">${label}</button>`;
+    d.setMonth(d.getMonth() + 1);
   }
+
   monthPicker.innerHTML = html;
   monthPicker.querySelectorAll('.month-tile').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1101,13 +1189,20 @@ function populateMonthPicker() {
       renderMonth();
     });
   });
+  const selectedTile = monthPicker.querySelector('.month-tile.selected');
+  if (selectedTile) selectedTile.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' });
 }
 
 function updateEntry(key, field, value) {
   if (!allData[key]) allData[key] = {};
-  const numericFields = ['pause', 'manualHours', 'soll'];
+  const numericFields = ['pause', 'soll'];
   if (value === '' || value === null) {
     delete allData[key][field];
+  } else if (field === 'manualHours') {
+    // Wert kommt aus einem type=time Feld im Format HH:MM (Dauer, keine Uhrzeit)
+    const mins = parseTimeToMinutes(value);
+    allData[key][field] = mins !== null ? parseFloat((mins / 60).toFixed(4)) : undefined;
+    if (allData[key][field] === undefined) delete allData[key][field];
   } else {
     allData[key][field] = numericFields.includes(field) ? Number(value) : value;
   }
@@ -1162,19 +1257,21 @@ function renderMonth() {
     }
 
     const hasDataForCal = !!(entry.start || entry.end || entry.pause || entry.manualHours || entry.soll || entry.status);
+    const isWeekend = dow === 0 || dow === 6;
+    const statusClass = status ? (status === 'frei' && isWeekend ? 'status-frei-weekend' : 'status-' + status) : '';
     let calClasses = 'calendar-day';
-    if (dow === 0 || dow === 6) calClasses += ' weekend';
+    if (isWeekend) calClasses += ' weekend';
     if (key === todayKeyStr) calClasses += ' today';
-    if (status) calClasses += ' status-' + status;
+    if (statusClass) calClasses += ' ' + statusClass;
     if (hasDataForCal) calClasses += ' has-data';
     calHtml += `<div class="${calClasses}" data-jump="${key}">${d}</div>`;
 
     const card = document.createElement('div');
     card.className = 'day-card';
     card.id = 'day-' + key;
-    if (dow === 0 || dow === 6) card.classList.add('weekend');
+    if (isWeekend) card.classList.add('weekend');
     if (key === todayKeyStr) card.classList.add('today');
-    if (status) card.classList.add('status-' + status);
+    if (statusClass) card.classList.add(statusClass);
 
     const hasData = entry.start || entry.end || entry.pause || entry.manualHours || entry.soll || entry.status;
     const isManual = entry.manualHours !== undefined && entry.manualHours !== null && entry.manualHours !== '';
@@ -1187,7 +1284,7 @@ function renderMonth() {
           <input type="time" value="${entry.start || ''}" data-key="${key}" data-field="start" aria-label="Kommen">
           <input type="time" value="${entry.end || ''}" data-key="${key}" data-field="end" aria-label="Gehen">
         </div>
-        <input type="number" min="0" step="0.25" inputmode="decimal" class="day-hours-input ${net !== null ? 'filled' : ''} ${isManual ? 'manual' : ''}" value="${isManual ? entry.manualHours : (net !== null ? minutesToDecimalHours(net) : '')}" data-key="${key}" data-field="manualHours" aria-label="Stunden manuell" title="Stunden manuell überschreiben">
+        <input type="time" class="day-hours-input ${net !== null ? 'filled' : ''} ${isManual ? 'manual' : ''}" value="${isManual ? decimalHoursToTimeValue(entry.manualHours) : (net !== null ? decimalHoursToTimeValue(minutesToDecimalHours(net)) : '')}" data-key="${key}" data-field="manualHours" aria-label="Stunden manuell (Std:Min)" title="Stunden manuell überschreiben (Std:Min)">
         <button class="del-btn" data-del="${key}" title="Tag löschen" style="visibility:${hasData ? 'visible' : 'hidden'}">✕</button>
       </div>
       <div class="day-row2">
@@ -1195,12 +1292,13 @@ function renderMonth() {
         <label>Pau.</label>
         <input type="number" min="0" step="5" inputmode="numeric" value="${entry.pause !== undefined ? entry.pause : ''}" data-key="${key}" data-field="pause" placeholder="0" aria-label="Pause">
         <label>Soll</label>
-        <input type="number" min="0" step="0.25" inputmode="decimal" value="${entry.soll !== undefined ? entry.soll : ''}" placeholder="${minutesToDecimalHours(getDefaultSollMinutes(dow)) || '0'}" data-key="${key}" data-field="soll" aria-label="Sollzeit">
+        <input type="number" min="0" step="0.25" inputmode="decimal" value="${entry.soll !== undefined ? entry.soll : (minutesToDecimalHours(getDefaultSollMinutes(dow)) || 0)}" data-key="${key}" data-field="soll" aria-label="Sollzeit">
         <select data-key="${key}" data-field="status" aria-label="Tagesstatus">
           <option value="" ${!status ? 'selected' : ''}>Normaler Arbeitstag</option>
           <option value="krank" ${status === 'krank' ? 'selected' : ''}>Krankheit</option>
           <option value="urlaub" ${status === 'urlaub' ? 'selected' : ''}>Urlaub</option>
-          <option value="frei" ${status === 'frei' ? 'selected' : ''}>Kein Arbeitstag</option>
+          <option value="frei" ${status === 'frei' ? 'selected' : ''}>${dow === 6 ? 'Samstag' : dow === 0 ? 'Sonntag' : 'Kein Arbeitstag'}</option>
+          <option value="zeitausgleich" ${status === 'zeitausgleich' ? 'selected' : ''}>Zeitausgleich</option>
         </select>
         <span class="day-diff ${diffClass}">${formatDiff(diff)}</span>
       </div>
@@ -1246,6 +1344,11 @@ function renderMonth() {
   lifetimeEl.textContent = formatDiff(lifetime);
   lifetimeEl.className = lifetime > 0 ? 'diff-pos' : lifetime < 0 ? 'diff-neg' : 'diff-zero';
 
+  const restUrlaubEl = document.getElementById('restUrlaub');
+  const restUrlaub = computeRestUrlaubTage();
+  restUrlaubEl.textContent = (restUrlaub % 1 === 0 ? restUrlaub : restUrlaub.toFixed(1));
+  restUrlaubEl.className = restUrlaub > 0 ? 'diff-pos' : restUrlaub < 0 ? 'diff-neg' : 'diff-zero';
+
   document.getElementById('statNormal').textContent = countNormal;
   document.getElementById('statKrank').textContent = countKrank;
   document.getElementById('statUrlaub').textContent = countUrlaub;
@@ -1254,7 +1357,7 @@ function renderMonth() {
 function computeLifetimeSaldoMinutes() {
   let total = Math.round((Number(settings.startSaldo) || 0) * 60);
   const start = settings.startDate ? new Date(settings.startDate + 'T00:00:00') : null;
-  const end = new Date(todayKeyStr + 'T00:00:00');
+  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + 1, 0); // Ende des aktuellen Monats
   if (!start || start > end) return total;
   const d = new Date(start);
   while (d <= end) {
@@ -1266,6 +1369,22 @@ function computeLifetimeSaldoMinutes() {
     d.setDate(d.getDate() + 1);
   }
   return total;
+}
+
+function computeRestUrlaubTage() {
+  let genommen = 0;
+  const start = settings.startDate ? new Date(settings.startDate + 'T00:00:00') : null;
+  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + 1, 0); // Ende des aktuellen Monats
+  if (start && start <= end) {
+    const d = new Date(start);
+    while (d <= end) {
+      const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      const entry = allData[key] || {};
+      if (entry.status === 'urlaub') genommen++;
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  return (Number(settings.urlaubssaldo) || 0) - genommen;
 }
 
 // ---------- Export / Import ----------
@@ -1291,7 +1410,7 @@ document.getElementById('btnExportCsv').addEventListener('click', () => {
   const [y, m] = currentMonthValue.split('-').map(Number);
   const year = y, monthIdx = m - 1;
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-  const statusLabel = { urlaub: 'Urlaub', krank: 'Krankheit', frei: 'Kein Arbeitstag' };
+  const statusLabel = { urlaub: 'Urlaub', krank: 'Krankheit', frei: 'Kein Arbeitstag', zeitausgleich: 'Zeitausgleich' };
   const rows = [['Datum','Wochentag','Status','Kommen','Gehen','Pause (Min.)','Ist-Stunden','Soll-Stunden','Differenz']];
   let totalIst = 0;
   let totalSoll = 0;
@@ -1343,7 +1462,10 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
           settings = { ...settings, ...imported.settings };
           saveSettings(settings);
           document.getElementById('defaultSollInput').value = settings.defaultSoll;
-          document.getElementById('startSaldoInput').value = settings.startSaldo;
+          { const hm = decimalHoursToHM(settings.startSaldo);
+            document.getElementById('startSaldoStdInput').value = hm.h;
+            document.getElementById('startSaldoMinInput').value = hm.m; }
+          document.getElementById('urlaubssaldoInput').value = settings.urlaubssaldo;
           document.getElementById('startDateInput').value = settings.startDate;
           populateMonthPicker();
         }
@@ -1432,6 +1554,13 @@ function populateLoginUserSelect() {
 }
 
 document.getElementById('loginCompanySelect').addEventListener('change', populateLoginUserSelect);
+
+document.getElementById('loginPasswordInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btnLogin').click();
+  }
+});
 
 document.getElementById('btnNewCompany').addEventListener('click', () => {
   const name = prompt('Name der neuen Firma:');
@@ -1614,7 +1743,10 @@ function initApp() {
   allData = loadData();
   settings = loadSettings();
   document.getElementById('defaultSollInput').value = settings.defaultSoll;
-  document.getElementById('startSaldoInput').value = settings.startSaldo;
+  const startSaldoHM = decimalHoursToHM(settings.startSaldo);
+  document.getElementById('startSaldoStdInput').value = startSaldoHM.h;
+  document.getElementById('startSaldoMinInput').value = startSaldoHM.m;
+  document.getElementById('urlaubssaldoInput').value = settings.urlaubssaldo;
   document.getElementById('startDateInput').value = settings.startDate;
   populateMonthPicker();
   updateLastSavedDisplay();
