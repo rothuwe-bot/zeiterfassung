@@ -82,9 +82,12 @@
     inset: 0;
     background: var(--bg);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 20px;
+    overflow-y: auto;
+    gap: 16px;
     z-index: 100;
   }
   .login-box {
@@ -128,12 +131,40 @@
     margin-bottom: 8px;
     text-align: center;
   }
-  .login-links {
+  .login-admin-box {
+    padding: 18px 22px;
+  }
+  .login-admin-box summary {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    text-align: center;
+  }
+  .login-admin-box summary::-webkit-details-marker { display: none; }
+  .login-admin-box summary::after { content: ' ▾'; }
+  .login-admin-box[open] summary::after { content: ' ▴'; }
+  .login-link-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 16px;
     align-items: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .login-link-group:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+  .login-link-group h3 {
+    margin: 0 0 2px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ink-soft);
+    font-weight: 700;
   }
   .login-link {
     background: none;
@@ -611,21 +642,35 @@
       <div class="login-error" id="loginError"></div>
       <button class="btn-big btn-kommen" id="btnLogin" style="width:100%;">Anmelden</button>
     </div>
+  </div>
 
-    <div class="login-links">
+  <details class="login-box login-admin-box">
+    <summary>Firma, Benutzer &amp; Backup verwalten</summary>
+
+    <div class="login-link-group">
+      <h3>Firma</h3>
       <button class="login-link" id="btnNewCompany" type="button">+ Neue Firma anlegen</button>
       <button class="login-link" id="btnRenameCompany" type="button">✎ Firma umbenennen</button>
       <button class="login-link login-link-danger" id="btnDeleteCompany" type="button">🗑 Firma löschen</button>
+    </div>
+
+    <div class="login-link-group">
+      <h3>Benutzer</h3>
       <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
       <button class="login-link" id="btnRenameUser" type="button">✎ Benutzer umbenennen</button>
-      <button class="login-link login-link-danger" id="btnDeleteUser" type="button">🗑 Benutzer löschen</button>
       <button class="login-link" id="btnChangePassword" type="button">🔒 Passwort ändern</button>
+      <button class="login-link login-link-danger" id="btnDeleteUser" type="button">🗑 Benutzer löschen</button>
+    </div>
+
+    <div class="login-link-group">
+      <h3>Backup</h3>
       <button class="login-link" id="btnLoginExport" type="button">⬇ Gesamt-Backup exportieren</button>
       <button class="login-link" id="btnLoginImport" type="button">⬆ Gesamt-Backup importieren</button>
       <input type="file" id="loginFileImport" accept="application/json">
     </div>
+
     <p class="login-hint">Einfacher Zugriffsschutz für ein gemeinsam genutztes Gerät – kein Ersatz für echte IT-Sicherheit. Alle Daten bleiben lokal auf diesem Gerät.</p>
-  </div>
+  </details>
 </div>
 
 <div id="appShell" style="display:none;">
