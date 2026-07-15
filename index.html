@@ -154,6 +154,19 @@
   .login-screen button {
     font-weight: 400;
   }
+  .login-onboarding {
+    margin-bottom: 18px;
+    padding: 14px;
+    background: var(--accent-soft);
+    border-radius: 12px;
+  }
+  .login-onboarding p {
+    margin: 0 0 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    text-align: center;
+  }
   main {
     padding: 14px 14px 40px;
     display: grid;
@@ -563,20 +576,29 @@
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
     <h1 class="login-title">Anmeldung</h1>
-    <div class="login-field">
-      <label for="loginCompanySelect">Firma</label>
-      <select id="loginCompanySelect"></select>
+
+    <div id="loginOnboarding" class="login-onboarding" style="display:none;">
+      <p>Willkommen! Hier ist noch keine Firma eingerichtet.<br>Lege zuerst eine Firma an, danach einen Benutzer mit Passwort.</p>
+      <button class="btn-big btn-kommen" id="btnOnboardingNewCompany" type="button" style="width:100%;">+ Erste Firma anlegen</button>
     </div>
-    <div class="login-field">
-      <label for="loginUserSelect">Benutzer</label>
-      <select id="loginUserSelect"></select>
+
+    <div id="loginFormWrap">
+      <div class="login-field">
+        <label for="loginCompanySelect">Firma</label>
+        <select id="loginCompanySelect"></select>
+      </div>
+      <div class="login-field">
+        <label for="loginUserSelect">Benutzer</label>
+        <select id="loginUserSelect"></select>
+      </div>
+      <div class="login-field">
+        <label for="loginPasswordInput">Passwort</label>
+        <input type="password" id="loginPasswordInput" autocomplete="off">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="btn-big btn-kommen" id="btnLogin" style="width:100%;">Anmelden</button>
     </div>
-    <div class="login-field">
-      <label for="loginPasswordInput">Passwort</label>
-      <input type="password" id="loginPasswordInput" autocomplete="off">
-    </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="btn-big btn-kommen" id="btnLogin" style="width:100%;">Anmelden</button>
+
     <div class="login-links">
       <button class="login-link" id="btnNewCompany" type="button">+ Neue Firma anlegen</button>
       <button class="login-link" id="btnRenameCompany" type="button">✎ Firma umbenennen</button>
@@ -1381,7 +1403,21 @@ function populateLoginCompanySelect() {
     sel.innerHTML = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
   populateLoginUserSelect();
+
+  const onboarding = document.getElementById('loginOnboarding');
+  const formWrap = document.getElementById('loginFormWrap');
+  if (companies.length === 0) {
+    onboarding.style.display = 'block';
+    formWrap.style.display = 'none';
+  } else {
+    onboarding.style.display = 'none';
+    formWrap.style.display = '';
+  }
 }
+
+document.getElementById('btnOnboardingNewCompany').addEventListener('click', () => {
+  document.getElementById('btnNewCompany').click();
+});
 
 function populateLoginUserSelect() {
   const companyId = document.getElementById('loginCompanySelect').value;
@@ -1506,6 +1542,10 @@ document.getElementById('loginFileImport').addEventListener('change', (e) => {
     try {
       const imported = JSON.parse(reader.result);
       if (!imported || typeof imported !== 'object' || !imported.namespaces || !Array.isArray(imported.companies) || !Array.isArray(imported.users)) {
+        if (imported && typeof imported === 'object' && (imported.data || imported.version === 2)) {
+          alert('Das ist eine Backup-Datei eines einzelnen Benutzers, kein Gesamt-Backup. Bitte zuerst mit dem betroffenen Benutzer anmelden und die Datei dort unter „Daten sichern → Backup importieren" einspielen.');
+          return;
+        }
         throw new Error('ungültiges Format');
       }
       if (!confirm('Gesamt-Backup importieren? Vorhandene Firmen/Benutzer mit gleicher ID werden überschrieben, alle anderen bleiben zusätzlich erhalten.')) return;
