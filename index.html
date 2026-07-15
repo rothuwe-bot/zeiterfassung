@@ -144,6 +144,7 @@
     cursor: pointer;
     padding: 4px;
   }
+  .login-link-danger { color: var(--danger); }
   .login-hint {
     margin: 16px 0 0;
     font-size: 11.5px;
@@ -614,8 +615,10 @@
     <div class="login-links">
       <button class="login-link" id="btnNewCompany" type="button">+ Neue Firma anlegen</button>
       <button class="login-link" id="btnRenameCompany" type="button">✎ Firma umbenennen</button>
+      <button class="login-link login-link-danger" id="btnDeleteCompany" type="button">🗑 Firma löschen</button>
       <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
       <button class="login-link" id="btnRenameUser" type="button">✎ Benutzer umbenennen</button>
+      <button class="login-link login-link-danger" id="btnDeleteUser" type="button">🗑 Benutzer löschen</button>
       <button class="login-link" id="btnChangePassword" type="button">🔒 Passwort ändern</button>
       <button class="login-link" id="btnLoginExport" type="button">⬇ Gesamt-Backup exportieren</button>
       <button class="login-link" id="btnLoginImport" type="button">⬆ Gesamt-Backup importieren</button>
@@ -1617,6 +1620,46 @@ document.getElementById('btnRenameUser').addEventListener('click', () => {
   saveUsers(users);
   populateLoginUserSelect();
   document.getElementById('loginUserSelect').value = userId;
+});
+
+function removeUserData(companyId, userId) {
+  const ns = companyId + '__' + userId;
+  try { localStorage.removeItem(STORAGE_KEY_PREFIX + '__' + ns); } catch (e) {}
+  try { localStorage.removeItem(SETTINGS_KEY_PREFIX + '__' + ns); } catch (e) {}
+  try { localStorage.removeItem(LAST_SAVED_KEY_PREFIX + '__' + ns); } catch (e) {}
+}
+
+document.getElementById('btnDeleteUser').addEventListener('click', () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  const userId = document.getElementById('loginUserSelect').value;
+  if (!companyId || !userId) { alert('Bitte zuerst Firma und Benutzer auswählen.'); return; }
+  const user = users.find(u => u.id === userId && u.companyId === companyId);
+  if (!user) return;
+  if (!confirm(`Benutzer "${user.name}" wirklich löschen? Alle seine Arbeitszeitdaten auf diesem Gerät werden unwiderruflich gelöscht.`)) return;
+  users = users.filter(u => u.id !== userId);
+  saveUsers(users);
+  removeUserData(companyId, userId);
+  populateLoginUserSelect();
+  alert('Benutzer gelöscht.');
+});
+
+document.getElementById('btnDeleteCompany').addEventListener('click', () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  if (!companyId) { alert('Bitte zuerst eine Firma auswählen.'); return; }
+  const company = companies.find(c => c.id === companyId);
+  if (!company) return;
+  const affectedUsers = users.filter(u => u.companyId === companyId);
+  const warning = affectedUsers.length
+    ? `Firma "${company.name}" wirklich löschen? Alle ${affectedUsers.length} zugehörigen Benutzer (${affectedUsers.map(u => u.name).join(', ')}) und deren Arbeitszeitdaten auf diesem Gerät werden unwiderruflich mitgelöscht.`
+    : `Firma "${company.name}" wirklich löschen?`;
+  if (!confirm(warning)) return;
+  affectedUsers.forEach(u => removeUserData(companyId, u.id));
+  users = users.filter(u => u.companyId !== companyId);
+  companies = companies.filter(c => c.id !== companyId);
+  saveUsers(users);
+  saveCompanies(companies);
+  populateLoginCompanySelect();
+  alert('Firma gelöscht.');
 });
 
 document.getElementById('btnChangePassword').addEventListener('click', async () => {
