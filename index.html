@@ -764,6 +764,7 @@ let STORAGE_KEY = null;
 let SETTINGS_KEY = null;
 let LAST_SAVED_KEY = null;
 const WOCHENTAGE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const FUTURE_MONTHS_AHEAD = 6; // wie viele Monate in die Zukunft navigierbar/berechenbar sind
 const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -1156,7 +1157,7 @@ function populateMonthPicker() {
   const base = new Date();
   currentMonthValue = `${base.getFullYear()}-${pad(base.getMonth()+1)}`;
   const startMonthValue = (settings.startDate || '2026-07-01').slice(0, 7);
-  const FUTURE_MONTHS = 6;
+  const FUTURE_MONTHS = FUTURE_MONTHS_AHEAD;
   const MAX_PAST_MONTHS = 15;
   let html = '';
 
@@ -1357,7 +1358,7 @@ function renderMonth() {
 function computeLifetimeSaldoMinutes() {
   let total = Math.round((Number(settings.startSaldo) || 0) * 60);
   const start = settings.startDate ? new Date(settings.startDate + 'T00:00:00') : null;
-  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + 1, 0); // Ende des aktuellen Monats
+  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + FUTURE_MONTHS_AHEAD + 1, 0); // Ende des letzten navigierbaren Monats
   if (!start || start > end) return total;
   const d = new Date(start);
   while (d <= end) {
@@ -1374,7 +1375,7 @@ function computeLifetimeSaldoMinutes() {
 function computeRestUrlaubTage() {
   let genommen = 0;
   const start = settings.startDate ? new Date(settings.startDate + 'T00:00:00') : null;
-  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + 1, 0); // Ende des aktuellen Monats
+  const end = new Date(todayObj.getFullYear(), todayObj.getMonth() + FUTURE_MONTHS_AHEAD + 1, 0); // Ende des letzten navigierbaren Monats
   if (start && start <= end) {
     const d = new Date(start);
     while (d <= end) {
