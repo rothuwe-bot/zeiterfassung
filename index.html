@@ -579,6 +579,7 @@
       <button class="login-link" id="btnRenameCompany" type="button">✎ Firma umbenennen</button>
       <button class="login-link" id="btnNewUser" type="button">+ Neuen Benutzer anlegen</button>
       <button class="login-link" id="btnRenameUser" type="button">✎ Benutzer umbenennen</button>
+      <button class="login-link" id="btnChangePassword" type="button">🔒 Passwort ändern</button>
     </div>
     <p class="login-hint">Einfacher Zugriffsschutz für ein gemeinsam genutztes Gerät – kein Ersatz für echte IT-Sicherheit. Alle Daten bleiben lokal auf diesem Gerät.</p>
   </div>
@@ -1379,7 +1380,8 @@ function populateLoginCompanySelect() {
 function populateLoginUserSelect() {
   const companyId = document.getElementById('loginCompanySelect').value;
   const sel = document.getElementById('loginUserSelect');
-  const list = users.filter(u => u.companyId === companyId);
+  const list = users.filter(u => u.companyId === companyId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
   if (list.length === 0) {
     sel.innerHTML = '<option value="">– kein Benutzer angelegt –</option>';
   } else {
@@ -1443,6 +1445,25 @@ document.getElementById('btnRenameUser').addEventListener('click', () => {
   saveUsers(users);
   populateLoginUserSelect();
   document.getElementById('loginUserSelect').value = userId;
+});
+
+document.getElementById('btnChangePassword').addEventListener('click', async () => {
+  const companyId = document.getElementById('loginCompanySelect').value;
+  const userId = document.getElementById('loginUserSelect').value;
+  if (!companyId || !userId) { alert('Bitte zuerst Firma und Benutzer auswählen.'); return; }
+  const user = users.find(u => u.id === userId && u.companyId === companyId);
+  if (!user) return;
+  const oldPw = prompt('Aktuelles Passwort von ' + user.name + ':');
+  if (oldPw === null) return;
+  const oldHash = await hashPassword(oldPw || '');
+  if (oldHash !== user.passwordHash) { alert('Das aktuelle Passwort ist falsch.'); return; }
+  const newPw = prompt('Neues Passwort:');
+  if (!newPw) return;
+  const newPw2 = prompt('Neues Passwort bestätigen:');
+  if (newPw !== newPw2) { alert('Die Passwörter stimmen nicht überein.'); return; }
+  user.passwordHash = await hashPassword(newPw);
+  saveUsers(users);
+  alert('Passwort geändert.');
 });
 
 document.getElementById('btnLogin').addEventListener('click', async () => {
