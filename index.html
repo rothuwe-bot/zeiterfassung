@@ -902,6 +902,25 @@ function nowTimeString() {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+const ROUND_INTERVAL = 15;
+
+// Kommen: immer auf das naechste 15-Minuten-Intervall AUFRUNDEN
+function roundedNowTimeStringUp() {
+  const d = new Date();
+  let totalMin = d.getHours() * 60 + d.getMinutes();
+  totalMin = Math.ceil(totalMin / ROUND_INTERVAL) * ROUND_INTERVAL;
+  if (totalMin >= 24 * 60) totalMin = 24 * 60 - 1; // Sicherheitsnetz kurz vor Mitternacht
+  return `${pad(Math.floor(totalMin / 60))}:${pad(totalMin % 60)}`;
+}
+
+// Gehen: immer auf das vorherige 15-Minuten-Intervall ABRUNDEN
+function roundedNowTimeStringDown() {
+  const d = new Date();
+  let totalMin = d.getHours() * 60 + d.getMinutes();
+  totalMin = Math.floor(totalMin / ROUND_INTERVAL) * ROUND_INTERVAL;
+  return `${pad(Math.floor(totalMin / 60))}:${pad(totalMin % 60)}`;
+}
+
 function renderToday() {
   const entry = allData[todayKeyStr] || {};
   document.getElementById('statusStart').textContent = entry.start || '–';
@@ -923,7 +942,7 @@ function renderToday() {
 
 document.getElementById('btnKommen').addEventListener('click', () => {
   if (!allData[todayKeyStr]) allData[todayKeyStr] = {};
-  allData[todayKeyStr].start = nowTimeString();
+  allData[todayKeyStr].start = roundedNowTimeStringUp();
   saveData(allData);
   renderToday();
   renderMonth();
@@ -931,7 +950,7 @@ document.getElementById('btnKommen').addEventListener('click', () => {
 
 document.getElementById('btnGehen').addEventListener('click', () => {
   if (!allData[todayKeyStr]) allData[todayKeyStr] = {};
-  allData[todayKeyStr].end = nowTimeString();
+  allData[todayKeyStr].end = roundedNowTimeStringDown();
   saveData(allData);
   renderToday();
   renderMonth();
