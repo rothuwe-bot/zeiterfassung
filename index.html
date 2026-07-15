@@ -476,6 +476,16 @@
     min-width: 28px;
     min-height: 28px;
   }
+  .jump-up-btn {
+    background: none;
+    border: none;
+    font-size: 15px;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    line-height: 1;
+    opacity: 0.7;
+  }
+  .jump-up-btn:active { opacity: 1; }
   .month-total-row {
     display: flex;
     justify-content: space-between;
@@ -1125,6 +1135,7 @@ function renderMonth() {
         <button class="del-btn" data-del="${key}" title="Tag löschen" style="visibility:${hasData ? 'visible' : 'hidden'}">✕</button>
       </div>
       <div class="day-row2">
+        <button class="jump-up-btn" data-jumpup="1" title="Zurück zum Kalender" aria-label="Zurück zum Kalender">📅</button>
         <label>Pau.</label>
         <input type="number" min="0" step="5" inputmode="numeric" value="${entry.pause !== undefined ? entry.pause : ''}" data-key="${key}" data-field="pause" placeholder="0" aria-label="Pause">
         <label>Soll</label>
@@ -1161,6 +1172,11 @@ function renderMonth() {
   });
   container.querySelectorAll('[data-del]').forEach(btn => {
     btn.addEventListener('click', () => deleteDay(btn.dataset.del));
+  });
+  container.querySelectorAll('[data-jumpup]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('calendarGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   });
 
   document.getElementById('monthIstSoll').textContent =
