@@ -798,9 +798,28 @@
       <button class="btn-outline" id="btnSwapDays" type="button" style="width:100%;margin-top:8px;">Tage tauschen</button>
     </details>
 
-    <div class="pause-row">
-      <label for="defaultSollInput">Standard-Sollzeit Mo–Fr (Std./Tag)</label>
-      <input type="number" id="defaultSollInput" min="0" step="0.25" inputmode="decimal">
+    <div class="pause-row" style="flex-wrap:wrap;">
+      <label style="flex-basis:100%;">Sollzeit pro Wochentag (Std.)</label>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <input type="number" id="weekdaySollMon" min="0" step="0.25" inputmode="decimal" style="width:46px;">
+        <span class="hint-text" style="margin:0;">Mo</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <input type="number" id="weekdaySollTue" min="0" step="0.25" inputmode="decimal" style="width:46px;">
+        <span class="hint-text" style="margin:0;">Di</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <input type="number" id="weekdaySollWed" min="0" step="0.25" inputmode="decimal" style="width:46px;">
+        <span class="hint-text" style="margin:0;">Mi</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <input type="number" id="weekdaySollThu" min="0" step="0.25" inputmode="decimal" style="width:46px;">
+        <span class="hint-text" style="margin:0;">Do</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <input type="number" id="weekdaySollFri" min="0" step="0.25" inputmode="decimal" style="width:46px;">
+        <span class="hint-text" style="margin:0;">Fr</span>
+      </span>
     </div>
     <div class="pause-row">
       <label for="startSaldoStdInput">Startsaldo (Std : Min, z. B. aus altem System)</label>
@@ -920,7 +939,8 @@ function effectiveStatus(entry, dow) {
 
 function getDefaultSollMinutes(dow) {
   if (dow === 0 || dow === 6) return 0; // Wochenende: kein Soll per Standard
-  return Math.round((Number(settings.defaultSoll) || 0) * 60);
+  const perDay = settings.weekdaySoll || {};
+  return Math.round((Number(perDay[dow]) || 0) * 60);
 }
 
 function getSollMinutes(entry, dow) {
@@ -1020,14 +1040,16 @@ if (!STORAGE_OK) {
   document.addEventListener('DOMContentLoaded', showStorageWarning);
 }
 
+const DEFAULT_WEEKDAY_SOLL = { 1: 5, 2: 4.5, 3: 4.5, 4: 5, 5: 4.5 }; // Mo, Di, Mi, Do, Fr
+
 function loadSettings() {
-  if (!STORAGE_OK) return { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
+  if (!STORAGE_OK) return { weekdaySoll: { ...DEFAULT_WEEKDAY_SOLL }, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
   try {
     const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    const defaults = { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
+    const defaults = { weekdaySoll: { ...DEFAULT_WEEKDAY_SOLL }, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
     return raw && typeof raw === 'object' ? { ...defaults, ...raw } : defaults;
   } catch (e) {
-    return { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
+    return { weekdaySoll: { ...DEFAULT_WEEKDAY_SOLL }, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
   }
 }
 function saveSettings(s) {
@@ -1038,7 +1060,7 @@ function saveSettings(s) {
     console.error('Fehler beim Speichern der Einstellungen:', e);
   }
 }
-let settings = { defaultSoll: 5, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
+let settings = { weekdaySoll: { ...DEFAULT_WEEKDAY_SOLL }, startSaldo: 0, urlaubssaldo: 0, startDate: '2026-07-01' };
 
 // ---------- Uhr ----------
 function tickClock() {
@@ -1181,11 +1203,19 @@ document.getElementById('sollInput').addEventListener('input', (e) => {
   }, 400);
 });
 
-document.getElementById('defaultSollInput').addEventListener('change', (e) => {
-  settings.defaultSoll = e.target.value === '' ? 0 : Number(e.target.value);
+const weekdaySollInputs = { 1: 'weekdaySollMon', 2: 'weekdaySollTue', 3: 'weekdaySollWed', 4: 'weekdaySollThu', 5: 'weekdaySollFri' };
+function saveWeekdaySollFromFields() {
+  if (!settings.weekdaySoll) settings.weekdaySoll = { ...DEFAULT_WEEKDAY_SOLL };
+  Object.keys(weekdaySollInputs).forEach(dow => {
+    const val = document.getElementById(weekdaySollInputs[dow]).value;
+    settings.weekdaySoll[dow] = val === '' ? 0 : Number(val);
+  });
   saveSettings(settings);
   renderToday();
   renderMonth();
+}
+Object.values(weekdaySollInputs).forEach(id => {
+  document.getElementById(id).addEventListener('change', saveWeekdaySollFromFields);
 });
 
 function saveStartSaldoFromFields() {
@@ -1563,7 +1593,10 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
         if (imported.settings && typeof imported.settings === 'object') {
           settings = { ...settings, ...imported.settings };
           saveSettings(settings);
-          document.getElementById('defaultSollInput').value = settings.defaultSoll;
+          if (!settings.weekdaySoll) settings.weekdaySoll = { ...DEFAULT_WEEKDAY_SOLL };
+          Object.keys(weekdaySollInputs).forEach(dow => {
+            document.getElementById(weekdaySollInputs[dow]).value = settings.weekdaySoll[dow];
+          });
           { const hm = decimalHoursToHM(settings.startSaldo);
             document.getElementById('startSaldoStdInput').value = hm.h;
             document.getElementById('startSaldoMinInput').value = hm.m; }
@@ -1884,7 +1917,9 @@ function startSession(company, user) {
 function initApp() {
   allData = loadData();
   settings = loadSettings();
-  document.getElementById('defaultSollInput').value = settings.defaultSoll;
+  Object.keys(weekdaySollInputs).forEach(dow => {
+    document.getElementById(weekdaySollInputs[dow]).value = settings.weekdaySoll[dow];
+  });
   const startSaldoHM = decimalHoursToHM(settings.startSaldo);
   document.getElementById('startSaldoStdInput').value = startSaldoHM.h;
   document.getElementById('startSaldoMinInput').value = startSaldoHM.m;
