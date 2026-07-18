@@ -70,6 +70,7 @@
     align-items: center;
     gap: 8px;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
   .session-line .login-link {
     color: #fff;
@@ -292,6 +293,43 @@
     font-family: inherit;
     background: #fff;
     color: var(--ink);
+  }
+  .weekday-soll-row {
+    margin-top: 16px;
+  }
+  .weekday-soll-row > label {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .weekday-soll-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .weekday-soll-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .weekday-soll-cell input {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 2px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    text-align: center;
+    background: #fff;
+    color: var(--ink);
+  }
+  .weekday-soll-cell input:focus { border-color: var(--accent); outline: none; }
+  .weekday-soll-cell span {
+    font-size: 12px;
+    color: var(--ink-soft);
   }
   .pause-row select {
     padding: 10px 8px;
@@ -696,6 +734,7 @@
     <div class="clock" id="clock">--:--:--</div>
     <div class="session-line">
       <span id="sessionLabel">–</span>
+      <button class="login-link" id="btnRefreshApp" type="button">↻ Aktualisieren</button>
       <button class="login-link" id="btnSwitchUser" type="button">Wechseln</button>
     </div>
   </div>
@@ -798,28 +837,30 @@
       <button class="btn-outline" id="btnSwapDays" type="button" style="width:100%;margin-top:8px;">Tage tauschen</button>
     </details>
 
-    <div class="pause-row" style="flex-wrap:wrap;">
-      <label style="flex-basis:100%;">Sollzeit pro Wochentag (Std.)</label>
-      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <input type="number" id="weekdaySollMon" min="0" step="0.25" inputmode="decimal" style="width:46px;">
-        <span class="hint-text" style="margin:0;">Mo</span>
-      </span>
-      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <input type="number" id="weekdaySollTue" min="0" step="0.25" inputmode="decimal" style="width:46px;">
-        <span class="hint-text" style="margin:0;">Di</span>
-      </span>
-      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <input type="number" id="weekdaySollWed" min="0" step="0.25" inputmode="decimal" style="width:46px;">
-        <span class="hint-text" style="margin:0;">Mi</span>
-      </span>
-      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <input type="number" id="weekdaySollThu" min="0" step="0.25" inputmode="decimal" style="width:46px;">
-        <span class="hint-text" style="margin:0;">Do</span>
-      </span>
-      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <input type="number" id="weekdaySollFri" min="0" step="0.25" inputmode="decimal" style="width:46px;">
-        <span class="hint-text" style="margin:0;">Fr</span>
-      </span>
+    <div class="weekday-soll-row">
+      <label>Sollzeit pro Wochentag (Std.)</label>
+      <div class="weekday-soll-grid">
+        <div class="weekday-soll-cell">
+          <input type="number" id="weekdaySollMon" min="0" step="0.25" inputmode="decimal">
+          <span>Mo</span>
+        </div>
+        <div class="weekday-soll-cell">
+          <input type="number" id="weekdaySollTue" min="0" step="0.25" inputmode="decimal">
+          <span>Di</span>
+        </div>
+        <div class="weekday-soll-cell">
+          <input type="number" id="weekdaySollWed" min="0" step="0.25" inputmode="decimal">
+          <span>Mi</span>
+        </div>
+        <div class="weekday-soll-cell">
+          <input type="number" id="weekdaySollThu" min="0" step="0.25" inputmode="decimal">
+          <span>Do</span>
+        </div>
+        <div class="weekday-soll-cell">
+          <input type="number" id="weekdaySollFri" min="0" step="0.25" inputmode="decimal">
+          <span>Fr</span>
+        </div>
+      </div>
     </div>
     <div class="pause-row">
       <label for="startSaldoStdInput">Startsaldo (Std : Min, z. B. aus altem System)</label>
@@ -1899,6 +1940,12 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
 
 document.getElementById('btnSwitchUser').addEventListener('click', () => {
   location.reload();
+});
+
+document.getElementById('btnRefreshApp').addEventListener('click', () => {
+  // Cache-Busting: erzwingt das Neuladen der aktuellsten Version von GitHub Pages
+  const url = location.pathname + '?refresh=' + Date.now();
+  location.href = url;
 });
 
 function startSession(company, user) {
