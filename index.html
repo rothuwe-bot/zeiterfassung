@@ -1943,9 +1943,21 @@ document.getElementById('btnSwitchUser').addEventListener('click', () => {
 });
 
 document.getElementById('btnRefreshApp').addEventListener('click', () => {
-  // Cache-Busting: erzwingt das Neuladen der aktuellsten Version von GitHub Pages
-  const url = location.pathname + '?refresh=' + Date.now();
-  location.href = url;
+  // Nur Daten/Anzeige neu laden - kein Seiten-Reload, keine erneute Anmeldung nötig
+  allData = loadData();
+  settings = loadSettings();
+  Object.keys(weekdaySollInputs).forEach(dow => {
+    document.getElementById(weekdaySollInputs[dow]).value = settings.weekdaySoll[dow];
+  });
+  const hm = decimalHoursToHM(settings.startSaldo);
+  document.getElementById('startSaldoStdInput').value = hm.h;
+  document.getElementById('startSaldoMinInput').value = hm.m;
+  document.getElementById('urlaubssaldoInput').value = settings.urlaubssaldo;
+  document.getElementById('startDateInput').value = settings.startDate;
+  populateMonthPicker();
+  updateLastSavedDisplay();
+  renderToday();
+  renderMonth();
 });
 
 function startSession(company, user) {
