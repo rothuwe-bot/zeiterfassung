@@ -222,6 +222,15 @@
     font-weight: 700;
   }
   .panel-subtle h2 { font-weight: 500; color: #8b918c; }
+  .panel-summary {
+    cursor: pointer;
+    list-style: none;
+    margin-bottom: 14px;
+  }
+  .panel-summary::-webkit-details-marker { display: none; }
+  .panel-summary h2 { margin: 0; display: inline; }
+  .panel-summary::after { content: ' ▾'; color: var(--ink-soft); font-size: 12px; }
+  details[open] > .panel-summary::after { content: ' ▴'; }
   .today-date {
     font-size: 16px;
     font-weight: 600;
@@ -787,8 +796,8 @@
     </div>
   </section>
 
-  <section class="panel">
-    <h2>Übersicht</h2>
+  <details class="panel" id="overviewPanel" open>
+    <summary class="panel-summary"><h2 style="display:inline;">Übersicht</h2></summary>
     <div class="month-total-row">
       <span>Ist / Soll (Monat)</span>
       <b id="monthIstSoll">0:00 / 0:00</b>
@@ -811,7 +820,7 @@
       <div class="status-stat"><b id="statUrlaub">0</b><span>Urlaub</span></div>
     </div>
     <div class="hint-text" style="margin-top:6px;text-align:center;">Sa/So ohne eigenen Status zählen automatisch als „Kein Arbeitstag"</div>
-  </section>
+  </details>
 
   <section class="panel">
     <h2>Monatsübersicht</h2>
