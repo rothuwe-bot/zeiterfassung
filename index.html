@@ -659,22 +659,6 @@
     margin-top: 10px;
     line-height: 1.4;
   }
-  .swap-box {
-    margin-top: 16px;
-    padding: 14px;
-    background: var(--bg);
-    border-radius: 12px;
-  }
-  .swap-box summary {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-  }
-  .swap-box summary::-webkit-details-marker { display: none; }
-  .swap-box summary::after { content: ' ▾'; }
-  .swap-box[open] summary::after { content: ' ▴'; }
   .settings-details {
     margin-top: 16px;
     padding: 14px;
@@ -848,20 +832,6 @@
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
-
-    <details class="swap-box">
-      <summary>🔄 Zwei Tage komplett tauschen</summary>
-      <p class="hint-text" style="margin-top:10px;">Tauscht alle Einträge (Kommen/Gehen, Pause, Stunden, Sollzeit, Status) zwischen zwei Tagen – z. B. wenn eigentlich am 15.07. gearbeitet wurde statt am 17.07. Der Saldo wird danach automatisch neu berechnet.</p>
-      <div class="pause-row">
-        <label for="swapDateA">Tag A</label>
-        <input type="date" id="swapDateA">
-      </div>
-      <div class="pause-row">
-        <label for="swapDateB">Tag B</label>
-        <input type="date" id="swapDateB">
-      </div>
-      <button class="btn-outline" id="btnSwapDays" type="button" style="width:100%;margin-top:8px;">Tage tauschen</button>
-    </details>
 
     <details class="settings-details">
       <summary>⚙️ Einstellungen (Sollzeiten, Salden, Startdatum)</summary>
@@ -1399,28 +1369,6 @@ function deleteDay(key) {
   renderMonth();
   renderToday();
 }
-
-document.getElementById('btnSwapDays').addEventListener('click', () => {
-  const dateA = document.getElementById('swapDateA').value;
-  const dateB = document.getElementById('swapDateB').value;
-  if (!dateA || !dateB) { alert('Bitte beide Tage auswählen.'); return; }
-  if (dateA === dateB) { alert('Bitte zwei unterschiedliche Tage auswählen.'); return; }
-  const labelA = new Date(dateA + 'T00:00:00').toLocaleDateString('de-DE');
-  const labelB = new Date(dateB + 'T00:00:00').toLocaleDateString('de-DE');
-  if (!confirm(`Alle Einträge zwischen ${labelA} und ${labelB} tauschen?`)) return;
-
-  const entryA = allData[dateA];
-  const entryB = allData[dateB];
-  if (entryA) allData[dateB] = entryA; else delete allData[dateB];
-  if (entryB) allData[dateA] = entryB; else delete allData[dateA];
-
-  saveData(allData);
-  renderMonth();
-  renderToday();
-  document.getElementById('swapDateA').value = '';
-  document.getElementById('swapDateB').value = '';
-  alert('Tage getauscht – Salden wurden neu berechnet.');
-});
 
 function renderMonth() {
   const [y, m] = currentMonthValue.split('-').map(Number);
