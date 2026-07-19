@@ -1967,6 +1967,7 @@ document.getElementById('btnRefreshApp').addEventListener('click', () => {
   updateLastSavedDisplay();
   renderToday();
   renderMonth();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 function startSession(company, user) {
