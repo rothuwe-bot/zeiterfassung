@@ -675,6 +675,23 @@
   .swap-box summary::-webkit-details-marker { display: none; }
   .swap-box summary::after { content: ' ▾'; }
   .swap-box[open] summary::after { content: ' ▴'; }
+  .settings-details {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 12px;
+  }
+  .settings-details summary {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+  }
+  .settings-details summary::-webkit-details-marker { display: none; }
+  .settings-details summary::after { content: ' ▾'; }
+  .settings-details[open] summary::after { content: ' ▴'; }
+  .settings-details[open] summary { margin-bottom: 4px; }
   input[type=file] { display: none; }
 </style>
 </head>
@@ -846,44 +863,47 @@
       <button class="btn-outline" id="btnSwapDays" type="button" style="width:100%;margin-top:8px;">Tage tauschen</button>
     </details>
 
-    <div class="weekday-soll-row">
-      <label>Sollzeit pro Wochentag (Std.)</label>
-      <div class="weekday-soll-grid">
-        <div class="weekday-soll-cell">
-          <input type="number" id="weekdaySollMon" min="0" step="0.25" inputmode="decimal">
-          <span>Mo</span>
-        </div>
-        <div class="weekday-soll-cell">
-          <input type="number" id="weekdaySollTue" min="0" step="0.25" inputmode="decimal">
-          <span>Di</span>
-        </div>
-        <div class="weekday-soll-cell">
-          <input type="number" id="weekdaySollWed" min="0" step="0.25" inputmode="decimal">
-          <span>Mi</span>
-        </div>
-        <div class="weekday-soll-cell">
-          <input type="number" id="weekdaySollThu" min="0" step="0.25" inputmode="decimal">
-          <span>Do</span>
-        </div>
-        <div class="weekday-soll-cell">
-          <input type="number" id="weekdaySollFri" min="0" step="0.25" inputmode="decimal">
-          <span>Fr</span>
+    <details class="settings-details">
+      <summary>⚙️ Einstellungen (Sollzeiten, Salden, Startdatum)</summary>
+      <div class="weekday-soll-row">
+        <label>Sollzeit pro Wochentag (Std.)</label>
+        <div class="weekday-soll-grid">
+          <div class="weekday-soll-cell">
+            <input type="number" id="weekdaySollMon" min="0" step="0.25" inputmode="decimal">
+            <span>Mo</span>
+          </div>
+          <div class="weekday-soll-cell">
+            <input type="number" id="weekdaySollTue" min="0" step="0.25" inputmode="decimal">
+            <span>Di</span>
+          </div>
+          <div class="weekday-soll-cell">
+            <input type="number" id="weekdaySollWed" min="0" step="0.25" inputmode="decimal">
+            <span>Mi</span>
+          </div>
+          <div class="weekday-soll-cell">
+            <input type="number" id="weekdaySollThu" min="0" step="0.25" inputmode="decimal">
+            <span>Do</span>
+          </div>
+          <div class="weekday-soll-cell">
+            <input type="number" id="weekdaySollFri" min="0" step="0.25" inputmode="decimal">
+            <span>Fr</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="pause-row">
-      <label for="startSaldoStdInput">Startsaldo (Std : Min, z. B. aus altem System)</label>
-      <input type="number" id="startSaldoStdInput" step="1" inputmode="numeric" placeholder="Std." style="width:52px;">
-      <input type="number" id="startSaldoMinInput" min="0" max="59" step="1" inputmode="numeric" placeholder="Min." style="width:52px;">
-    </div>
-    <div class="pause-row">
-      <label for="urlaubssaldoInput">Urlaubssaldo (Tage)</label>
-      <input type="number" id="urlaubssaldoInput" step="0.5" inputmode="decimal" placeholder="0">
-    </div>
-    <div class="pause-row">
-      <label for="startDateInput">Aufzeichnung beginnt am</label>
-      <input type="date" id="startDateInput">
-    </div>
+      <div class="pause-row">
+        <label for="startSaldoStdInput">Startsaldo (Std : Min, z. B. aus altem System)</label>
+        <input type="number" id="startSaldoStdInput" step="1" inputmode="numeric" placeholder="Std." style="width:52px;">
+        <input type="number" id="startSaldoMinInput" min="0" max="59" step="1" inputmode="numeric" placeholder="Min." style="width:52px;">
+      </div>
+      <div class="pause-row">
+        <label for="urlaubssaldoInput">Urlaubssaldo (Tage)</label>
+        <input type="number" id="urlaubssaldoInput" step="0.5" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="pause-row">
+        <label for="startDateInput">Aufzeichnung beginnt am</label>
+        <input type="date" id="startDateInput">
+      </div>
+    </details>
     <div id="monthBody" style="margin-top: 18px;"></div>
   </section>
 
