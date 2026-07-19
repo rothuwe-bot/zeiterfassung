@@ -751,8 +751,8 @@
 
 <main>
 
-  <section class="panel">
-    <h2>Heute</h2>
+  <details class="panel" id="todayPanel">
+    <summary class="panel-summary"><h2 style="display:inline;">Heute</h2></summary>
     <div class="today-date" id="todayDate">-</div>
     <div class="btn-row">
       <button class="btn-big btn-kommen" id="btnKommen">Kommen</button>
@@ -794,9 +794,9 @@
       <span>Differenz zur Sollzeit</span>
       <b id="diffToday">–</b>
     </div>
-  </section>
+  </details>
 
-  <details class="panel" id="overviewPanel" open>
+  <details class="panel" id="overviewPanel">
     <summary class="panel-summary"><h2 style="display:inline;">Übersicht</h2></summary>
     <div class="month-total-row">
       <span>Ist / Soll (Monat)</span>
